@@ -1,0 +1,18 @@
+{
+    "name": "Testing",
+    "short_name":"Test",
+    "start_url": "/",
+    "icons":[
+        {
+            "src": "/src/images/icon-192-192.png",
+            "type": "image/png",
+            "sizes": "192x192"
+        },
+        {
+            "src": "/src/images/icon-512-512.png",
+            "type": "image/png",
+            "sizes": "512x512"
+        }
+    ],
+    "display": "standalone"
+}
