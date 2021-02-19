@@ -10,63 +10,49 @@ function signIn (email, pass) {
                     email: email,
                     pass: value
                 }
-                window.indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB
-                let openRequest = indexedDB.open("db", 1);
-                openRequest.onerror = (e) => {
-                    console.log('Error', e.target.errorCode);
-                }
-                openRequest.onsuccess = (e) => {
-                    console.log('Success')
-                    var db = e.target.result;
+                connectDb('db', function(db){
                     var transaction = db.transaction('auth', 'readwrite')
                     var auth = transaction.objectStore('auth')
-                    // let a = {
-                    //     login: 'test@mail.ru',
-                    //     pass: 'test'
-                    // }
-                    // let request = auth.add(a);
-                    // console.dir(request)
-                    var authentication = () =>{
-                        var request = auth.openCursor();
-                        request.onsuccess = (event) => {
-                            var cursor = event.target.result;
-                            if (cursor) {
-                                if (cursor.value.login.indexOf(email) !== -1 && cursor.value.pass.indexOf(value) !== -1) {
-                                    return 'true';
-                                }
-                        
-                                cursor.continue();          
-                            }else{
-                                return 'error';
+                    var get = auth.getAll()
+                    var auth_name, auth_token
+                    get.onsuccess = () => {
+                        if(get.result.length!=0){
+                            var checkAcc = () => {
+                                var check = 'error'
+                                get.result.map((i)=>{
+                                    if(check!= true && (i.login != email || i.pass != value)){
+                                        check = false
+                                    }else if(''+i.login==''+email && ''+i.pass==''+value){
+                                        check = true
+                                        auth_name = i.name
+                                        auth_token = i.token
+                                    }
+                                })
+                                console.log(check)
+                                return check
                             }
-                            return 'false';
+                            if (checkAcc()==true){
+                                var cursor = event.target.result;
+                                sessionStorage.setItem('name', auth_name);
+                                sessionStorage.setItem('token', auth_token);
+                                window.location.href = "../../index.html";
+                            }else if(checkAcc()=='error'){
+                                alert.innerHTML = 'Ошибка';
+                                alert.classList.remove("d-none");
+                            }else if(checkAcc()==false){
+                                alert.innerHTML = 'Неправильно введен логин или пароль';
+                                alert.classList.remove("d-none");
+                            }
+                        }else{
+                            alert.innerHTML = 'Неправильно введен логин или пароль';
+                            alert.classList.remove("d-none");
                         }
                     }
-                    if (authentication()=='true'){
-                        var cursor = event.target.result;
-                        sessionStorage.setItem('name', cursor.value.name);
-                        sessionStorage.setItem('token', cursor.value.token);
-                        window.location.href = "../../index.html";
-                    }else if(authentication()=='error'){
+                    get.onerror = () => {
                         alert.innerHTML = 'Ошибка';
                         alert.classList.remove("d-none");
-                    }else if(authentication()=='false'){
-                        alert.innerHTML = 'Неправильно введен логин или пароль';
-                        alert.classList.remove("d-none");
                     }
-                    // request.onsuccess = () => {
-                    //     console.log('Записано')
-                    // }
-                    // request.onerror = (e) => {
-                    //     console.log('Ошибка при записи', e.target.error)
-                    // }
-                }
-                openRequest.onupgradeneeded = () => {
-                    console.log('onupgradeneeded')
-                    if (!openRequest.result.objectStoreNames.contains('auth')){
-                        openRequest.result.createObjectStore('auth', {keyPath: 'id', autoIncrement: true})
-                    }
-                }
+                },'auth','id',true)
             }).catch(function(error){
                 alert.innerHTML = 'Error'+error;
                 alert.classList.remove("d-none");

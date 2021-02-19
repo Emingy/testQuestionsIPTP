@@ -17,25 +17,16 @@ function addNote(note){
             date: date(),
             note: note
         }
-    
-        let response = fetch('../src/php/addNote.php', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json;charset=utf-8'
-            },
-            body: JSON.stringify(data)
-          });
-        response.then(function(result){
-            result.text().then(function(res){
-                if(res == 'OK'){
-                    console.log(res)
-                }else{
-                    console.error('Error',res)
-                }
-            })
-        })
-        response.catch(function(error){
-            console.error('Error',error)
-        })
+        connectDb('db2',function(db){
+            var transaction = db.transaction('notes', 'readwrite')
+            var notes = transaction.objectStore('notes')
+            let request = notes.add(data);
+            console.dir(request)
+            request.onsuccess = () => {
+                console.log('success')
+            }
+            request.onerror = (e) => {
+            }
+        },'notes','id',true)
     }
 }
